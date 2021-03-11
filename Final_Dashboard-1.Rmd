@@ -1,0 +1,91 @@
+---
+title: "Air Quality Index - India : Team Airbusters"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Effects of 'rspm' in Industrial and Residential Areas
+
+```{r}
+library(plotly)
+shrmp<-read.csv("CleanedAQI_removedNA.csv")
+
+plot_ly(shrmp, y =~state , x=~rspm, color = ~type, type = "box")
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Statewise 'so2' and 'no2' effects
+
+```{r}
+library(highcharter) 
+library(dplyr)
+library(viridisLite) 
+library(treemap) 
+library(RColorBrewer)
+
+hctreemap2(data = shrmp,
+           group_vars = c("state"),
+           size_var = "so2",
+           color_var = "no2",
+           layoutAlgorithm = "squarified",
+           levelIsConstant = FALSE,
+           levels = list(
+             list(level = 1, dataLabels = list(enabled = TRUE)),
+             list(level = 2, dataLabels = list(enabled = FALSE)),
+             list(level = 3, dataLabels = list(enabled = FALSE))
+           )) %>%
+  hc_colorAxis(minColor = brewer.pal(7, "Greens")[1],
+               maxColor = brewer.pal(7, "Greens")[7]) %>% hc_tooltip(pointFormat = "<b>{point.name}</b>:<br>
+                        SO2: {point.value:,.0f}<br>
+                        No2: {point.colorValue:,.0f}")
+
+```
+
+
+---------------------------------------------------------------------------------------------
+### How Industrial and Residential areas are affected over the years
+
+```{r}
+library(plotly)
+library(gapminder)
+df <- shrmp
+fig <- df %>%
+  plot_ly(
+    x = ~so2,
+    y = ~no2,
+    color = ~type,
+    frame = ~date,
+    text = ~state,
+    hoverinfo = "text",
+    type = 'scatter',
+    mode = 'markers')
+fig <- fig %>% layout(
+  xaxis = list(
+    type = "log" ))
+fig <- fig %>% animation_opts(
+  1000, easing = "elastic", redraw = FALSE)
+
+fig <- fig %>% animation_button(
+  x = 1, xanchor = "right", y = 0, yanchor = "bottom")
+
+fig <- fig %>% 
+  animation_slider(currentvalue = list(prefix = "Date ", font = list(color="black")))
+fig
+
+```
+
+
+
+
